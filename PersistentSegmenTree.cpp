@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <ctime>
 
 using ll = long long;
 using ull = unsigned ll;
@@ -16,26 +17,37 @@ public:
 
 std::vector<node*> seg_vers;
 
+node* lc(node* head) {
+    if(head == nullptr) return nullptr;
+    return head->left;
+}
+
+node* rc(node* head) {
+    if(head == nullptr) return nullptr;
+    return head->right;
+}
+
 ll get_mid(ll left,ll right) {
     return (right - left) / 2 + left;
 }
 
 void add(node* head, node* root, ll pos, ll value, ll left = MININT, ll right = MAXINT) {
     if(head != nullptr) {
+        root->value = head->value;
         root->left = head->left;
         root->right = head->right;
     }
     if(left == right) {
-        root->value  =std::max(root->value,value);
+        root->value = std::max(root->value, value);
         return;
     }
     ll mid = get_mid(left,right);
     if(root->left == nullptr || pos <= mid) root->left = new node();
     if(root->right == nullptr || pos > mid) root->right = new node();
     if(pos <= mid)
-        add(head->left,root->left,pos,value,left,mid);
+        add(lc(head),root->left,pos,value,left,mid);
     else 
-        add(head->right,root->right,pos,value,mid + 1,right);
+        add(rc(head),root->right,pos,value,mid + 1,right);
     root->value = std::max(root->left->value,root->right->value);
 }
 
@@ -67,7 +79,7 @@ bool run_test() {
     vers_ans.push_back(std::vector<ll>(range.second - range.first + 1, MININT));
 
     auto do_add = [&](int root_version,ll pos,ll value) {
-        vers_ans.push_back(vers_ans[root_version]);
+        vers_ans.push_back(std::vector<ll>(vers_ans[root_version]));
         vers_ans.back()[pos - range.first] = std::max(vers_ans.back()[pos - range.first],value);
 
         seg_vers.push_back(new node());
@@ -76,10 +88,9 @@ bool run_test() {
 
     auto do_get_max = [&](int version,ll s,ll e) {
         ll ans = MININT;
-        for(int q = s - range.first;q <= e;q++) {
+        for(int q = s - range.first;q <= e - range.first;q++) {
             ans = std::max(vers_ans[version][q],ans);
         }
-
         ll try_ans = get_max(seg_vers[version],s,e);
         return try_ans == ans;
     };
@@ -104,6 +115,7 @@ bool run_test() {
 }
 
 int main() {
+    std::srand(std::time(0));
     int _ = 0;
     std::cin >> _;
     for(int q = 1;q <= _;q++) {
