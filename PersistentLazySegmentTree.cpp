@@ -141,10 +141,12 @@ bool run_test() {
             ll version = (ull)get_rand_value() % vers_ans.size();
             std::pair<ll,ll> range_query = get_rand_range(range.first,range.second);
             if(!do_get_sum(version,range_query.first,range_query.second)) {
+                destroy_tree_vector(seg_vers);
                 return false;
             }
         }
     }
+    destroy_tree_vector(seg_vers);
     return true;
 }
 
