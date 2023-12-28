@@ -69,7 +69,7 @@ void add(node* root,ll s,ll e,ll x,ll left = MININT,ll right = MAXINT) {
 std::pair<ll,ll> get_min(node* root,ll s,ll e,ll left = MININT, ll right = MAXINT) {
     if(root == nullptr) return {MAXINT,0};
     if(s <= left && right <= e) return {root->value,root->count};
-    if(s > right || e <  left) return {MAXINT,0};
+    if(s > right || e < left) return {MAXINT,0};
     fix(root,left,right);
     ll mid = get_mid(left,right);
     std::pair<ll,ll> get_left = get_min(root->left,s,e,left,mid);
