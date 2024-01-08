@@ -113,6 +113,7 @@
     "optional": "cpp",
     "random": "cpp",
     "string_view": "cpp",
-    "numbers": "cpp"
+    "numbers": "cpp",
+    "set": "cpp"
   }
 }

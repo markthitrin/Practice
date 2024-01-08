@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <Math.h>
 
 using ll = long long;
 using ull = unsigned ll;
@@ -98,6 +99,16 @@ double get_rand_double(ll min,ll max) {
     return double((ull)get_rand_value() % (max - min + 1000) + min) / 1000;
 }
 
+point get_rand_point(ll radius) {
+    point new_point;
+    double r = (ull)get_rand_double(0,radius * 5);
+    r = radius * ((double)10 - std::sqrt(double(100) - (20 * r / radius))) / 10;
+    double angle = get_rand_double(0,2 * M_PI);
+    new_point.y = r * std::sin(angle);
+    new_point.x = r * std::cos(angle);
+    return new_point;
+}
+
 bool run_test() {
     ll point_number = (ull)get_rand_value() % (25) + 25;
     std::vector<point> points;
@@ -105,8 +116,7 @@ bool run_test() {
 
     for(int q = 0;q < point_number;q++) {
         point new_point;
-        new_point.x = get_rand_double(-5000,5000);
-        new_point.y = get_rand_double(-5000,5000);
+        new_point = get_rand_point(500);
         points.push_back(new_point);
     }
     hull = convex_hull(points);
