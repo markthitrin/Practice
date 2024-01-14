@@ -34,7 +34,7 @@ int main() {
             std::cin >> value;
             std::cout << s.order_of_key(value) << std::endl;
         }
-        else {
+        else { 
             // get the k-th elements in the set
             int value;
             std::cin >> value;
