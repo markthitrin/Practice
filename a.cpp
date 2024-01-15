@@ -87,7 +87,34 @@ ll get_mode(node* root) {
 }
 
 std::vector<ll> MO_algorithm(std::vector<ll>& a,std::vector<query> Q) {
-   return std::vector<ll>();
+    std::sort(Q.begin(),Q.end(),[](query qu1,query qu2) {
+        if(qu1.left / sqrt_N != qu2.left / sqrt_N) return qu1.left < qu2.left;
+        return qu1.right < qu2.right;
+    });
+    ll cur_left = a.size();
+    ll cur_right = -1;
+    std::vector<ll> ans(Q.begin(),Q.end());
+    node* root = new node();
+    for(int q = 0;q < Q.size();q++) {
+        while(cur_left < Q[q].left) {
+            subtract(root,a[cur_left]);
+            ++cur_left;
+        }
+        while(cur_left > Q[q].left) {
+            --cur_left;
+            add(root,a[cur_left]);
+        }
+        while(cur_right > Q[q].right) {
+            subtract(root,a[cur_right]);
+            --cur_right;
+        }
+        while(cur_right < Q[q].right) {
+            ++cur_right;
+            add(root,a[cur_right]);
+        }
+        ans[Q[q].query_number] = get_mode(root);
+    }
+    return ans;
 }
 
 ll get_mode_brute_force(std::vector<ll>& a,ll left,ll right) {
