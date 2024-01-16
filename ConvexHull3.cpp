@@ -16,18 +16,21 @@ public:
     double x;
     double y;
     point() {}
-    point(double _x,double _y) : x(_x) , y(_y) {}
+    point(const double& _x,const double& _y) : x(_x) , y(_y) {}
+    point operator+(const point& other) const{
+        point res;
+        res.x = x + other.x;
+        res.y = y + other.y;
+        return res;
+    }
     point operator-(const point& other) const{
         point res;
         res.x = x - other.x;
         res.y = y - other.y;
         return res;
     }
-    point operator+(const point& other) const{
-        point res;
-        res.x = x + other.x;
-        res.y = y + other.y;
-        return res;
+    bool operator==(const point& other)const{
+        return x == other.x && y == other.y;
     }
     void print() {
         std::cout << "(" << x << "," << y << ")\n";
@@ -37,46 +40,95 @@ public:
 ll orientate(point a,point b,point c) {
     point ab = b - a;
     point bc = c - b;
-    if(ab.x * bc.y == ab.y * bc. x) return 0;
-    if(ab.x * bc.y > ab.y * bc.x) return 1;
+    if(ab.x * bc.y == ab.y * bc.x) return 0;
+    else if(ab.x * bc.y > ab.y * bc.x) return 1;
     return -1;
 }
 
-ll get_mid(ll left,ll right) {
-    return (right - left) / 2 + left;
-}
-
-std::vector<point> recur1(const std::vector<point>& points,ll left,ll right) {
-    if(right == left) return std::vector<point>(1,points[left]);
-    ll mid = get_mid(left,right);
-    std::vector<point> left_convex = recur1(points,left,mid);
-    std::vector<point> right_convex = recur1(points,mid + 1,right);
-    std::vector<point> res;
-    ll left_end = left_convex.size() - 1, right_start = 0;
-    while(true) {
-        if(right_start < right_convex.size() - 1 && 
-            orientate(left_convex[left_end],right_convex[right_start],right_convex[right_start + 1]) == 1) {
-                right_start = (right_start + 1) % right_convex.size();
-            }
-        else if(left_end >= 1 && 
-            orientate(left_convex[left_end - 1],left_convex[left_end],right_convex[right_start]) == 1) {
-                left_end = (left_end - 1);
-            }
-        else break;
-    }
-    ll left_start = 0,right_end = 0;
-    while(true) {
-        if(left_start < left_convex.size() - 1 &&
-            orientate(right_convex[right_end],left_convex[left_start],left_convex[left_start + 1]) == 1) {
-                left_start = (left_start + 1) % left_convex.size();
-            }
-    }
-}
-
-std::vector<point> get_convex_hull(const std::vector<point>& points) {
-    std::vector<point> f(points.begin(),points.end());
-    std::sort(f.begin(),f.end(),[](point a,point b) {
-        return a.x < b.x;
+std::vector<point> get_convex_hull(std::vector<point> points) {
+    std::sort(points.begin(),points.end(),[](point a,point b) {
+        if(a.x != b.x) return a.x < b.x;
+        return a.y < b.y;
     });
-    return recur1(points,0,points.size() - 1);
+    std::vector<bool> check(points.size(),false);
+    std::vector<point> res;
+    std::vector<ll> point_number;
+    for(int q = 0;q < points.size();q++){
+        while(res.size() >= 2 && orientate(res[res.size() - 2],res.back(),points[q]) == 1) {
+            check[point_number.back()] = false;
+            point_number.pop_back();
+            res.pop_back();
+        }
+        res.push_back(points[q]);
+        point_number.push_back(q);
+        check[point_number.back()] = true;
+    }
+    for(int q = points.size() -1;q>=0;q--) {
+        if(check[q]) continue; 
+        while(res.size() >= 2 && orientate(res[res.size() - 2],res.back(),points[q]) == 1) {
+            res.pop_back();
+        }
+        res.push_back(points[q]);
+    }
+    while(res.size() >= 2 && orientate(res[res.size() - 2],res.back(),res[0]) == 1) {
+        res.pop_back();
+    }
+    res.push_back(res[0]);
+    return res;
+}
+
+bool check_all_in(std::vector<point>& hull,std::vector<point>& all_points) {
+    for(int q = 0;q < all_points.size();q++) {
+        for(int w = 0;w < hull.size() - 1;w++) {
+            if(all_points[q] == hull[w] || all_points[q] == hull[w]) continue;
+            if(orientate(hull[w],all_points[q],hull[w + 1]) == -1) 
+                return false;
+        }
+    }
+    return true;
+}
+
+ll get_rand_value() {
+    #define UR (ull)std::rand()
+    return UR << 49 | UR << 34 | UR << 19 | UR << 4 | UR & (15); 
+}
+
+double get_rand_double(ll min,ll max) {
+    max *= 1000;
+    min *= 1000;
+    return double((ull)get_rand_value() % (max - min + 1000) + min) / 1000;
+}
+
+point get_rand_point(ll radius) {
+    point new_point;
+    double r = (ull)get_rand_double(0,radius * 5);
+    r = radius * ((double)10 - std::sqrt(double(100) - (20 * r / radius))) / 10;
+    double angle = get_rand_double(0,2 * M_PI);
+    new_point.y = r * std::sin(angle);
+    new_point.x = r * std::cos(angle);
+    return new_point;
+}
+
+bool run_test() {
+    ll point_number = (ull)get_rand_value() % 10000 + 10000;
+    std::vector<point> all_points(point_number);
+    for(int q = 0;q < all_points.size();q++) {
+        all_points[q] = get_rand_point(100);
+    } 
+    std::vector<point> hull = get_convex_hull(all_points);
+    return check_all_in(hull,all_points);
+}
+
+int main() {
+    int  _ = 0;
+    std::cin >> _;
+    for(int q = 1;q <= _;q++) {
+        std::cout << "testcase " << q << " : ";
+        if(run_test()) {
+            std::cout << "passed\n";
+        }
+        else {
+            std::cout << "failed\n";
+        }
+    }
 }
