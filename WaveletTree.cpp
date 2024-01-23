@@ -108,7 +108,7 @@ bool run_test() {
         ll get_ans = get_k_smallest(a,root,left,right,k);
         return true;
     };
-    for(int q = 0;q < 3000;q++) {
+for(int q = 0;q < 3000;q++) {
         int left = (ull)get_rand_value() % vector_size;
         int right =(ull)get_rand_value() % vector_size;
         if(left > right)std::swap(left,right);
