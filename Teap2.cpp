@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <set>
 
 using ll = long long;
 using ull = unsigned ll;
@@ -12,104 +13,69 @@ ll get_rand_value();
 
 class node{
 public:
-    ll key;
-    ll value;
-    bool do_reverse;
-    ll shift = 0;
-    ll min;
-    ll max;
     node* left = nullptr;
     node* right = nullptr;
-    node() : key(get_rand_value()) {}
-    node(ll _value) : value(_value) , min(_value), max(_value) , key(get_rand_value()) {}
+    ll key;
+    ll size;
+    node() : key(get_rand_value()), size(1) {}
 };
 
-void push_shift(node* root,ll shift) {
-    if(!root) return;
-    root->shift += shift;
-    root->min += shift;
-    root->max += shift;
-    root->value += shift;
-}
-
-void push_reverse(node* root,ll left,ll right) {
-    if(!root) return;
-    root->shift = root->shift + left + right - root->min - root->min;
-    root->min = left + right - root->min;
-    root->max = left + right - root->max;
-    root->value = left + right - root->value;
-    root->do_reverse = !root->do_reverse;
-}
-
-void push_down(node* root) {
-    push_shift(root->left,root->shift);
-    push_shift(root->right,root->shift);
-    root->shift = 0;
-    
-    if(!root->do_reverse) return;
-    push_reverse(root->left,root->min,root->max);
-    push_reverse(root->right,root->min,root->max);
-    root->do_reverse = false;
+ll get_size(node* root) {
+    if(root) return root->size;
+    return 0;
 }
 
 void fix(node* root) {
     if(!root) return;
-    if(!root->left && !root->right) return;
-    root->min = root->left?root->left->min:root->right->min;
-    root->max = root->right?root->right->max:root->left->max;
+    root->size = 1 + get_size(root->left) + get_size(root->right);
+    return; 
 }
 
-node* merge(node* p, node* q) {
-    if(!p || !q) return !p?q:p;
-    push_down(p);
-    push_down(q);
-    if(p->key < q->key) std::swap(p,q);
-    if(q->value < p->value) p->left = merge(p->left,q);
-    else p->right = merge(p->right,q);
-    fix(p);
-    return p;
-}
-
-void tree_check(node* root) {
-    if(!root) return;
-    if(root->left && root->left->value > root->value) 
-        std::cout << "hey\n";
-    if(root->right && root->right->value < root->value)
-        std::cout << "sdfff";
-    if(root->left && root->key < root->left->key)
-        std::cout << " sdfsdfff";
-    if(root->right && root->key < root->right->key)
-        std::cout << "sssssssss";
-    tree_check(root->left);
-    tree_check(root->right);
-}
-
-void reverse(node* root,ll left,ll right) {
-    if(!root) return;
-    if(right < root->min && left > root->max) return;
-    if(left <= root->min && root->max <= right) {
-        root->do_reverse = !root->do_reverse;
-        root->shift = root->shift + right - root->min + left - root->min;
-        root->min = right - root->min + left;
-        root->max = right - root->max + left;
-        root->value = right - root->value + left;
+void split_sub_tree(node* root,node*& left,node*& right,ll s) {
+    if(!root)
+        left = right = nullptr;
+    else if(get_size(root->left) + 1 <= s) {
+        left = root;
+        split_sub_tree(root->right,left->right,right,s - get_size(root->left) - 1);
     }
     else {
-        push_down(root);
-        reverse(root->left,left,right);
-        reverse(root->right,left,right);
-        fix(root);
+        right = root;
+        split_sub_tree(root->left,left,right->left,s);
+    }
+    fix(root);
+}
+
+node* merge(node* left,node* right) {
+    if(!left || !right) return left?left:right;
+    if(left->key > right->key) {
+        left->right = merge(left->right,right);
+        fix(left);
+        return left;
+    }
+    else {
+        right->left = merge(left,right->left);
+        fix(right);
+        return right;
     }
 }
 
-node* find(node* root,ll value) {
-    if(root == nullptr)
-        std::cout << "sdf";
-    if(root->value == value) return root;
-    push_down(root);
-    if(value < root->value) 
-        return find(root->left,value);
-    return find(root->right,value);
+node* find(node* root,ll s) {
+    if(!root) return nullptr;
+    if(get_size(root->left) < s) {
+        return find(root->right,s- get_size(root->left) - 1);
+    }
+    else if(get_size(root->left) == s) {
+        return root;
+    }
+    else {
+        return find(root->left,s);
+    }
+}
+
+node* insert(node* root,node* new_node,ll pos) {
+    node *left = nullptr,*right = nullptr;
+    split_sub_tree(root,left,right,pos);
+    return merge(merge(left,new_node),right);
 }
 
 ll get_rand_value() {
@@ -118,80 +84,48 @@ ll get_rand_value() {
 }
 
 bool run_test() {
-    int vector_size = (ull)get_rand_value() % 3000 + 3000;
-    std::vector<node> v(vector_size);
+    int vector_size = (ull)get_rand_value() % 5000 + 5000;
+    std::set<ll> ss;
+    std::vector<ll> v(vector_size);
     for(int q = 0;q < v.size();q++) {
-        v[q] = node((ull)get_rand_value() % 10000);
-    }
-    std::sort(v.begin(),v.end(),[](node a,node b) {
-        return a.value < b.value;
-    });
-    for(int q = 0;q < v.size() - 1;q++) {
-        if(v[q].value == v[q + 1].value) {
-            v.erase(v.begin() + q); --q;
-        }
+        v[q] = (ull)get_rand_value();
     }
     node* root = nullptr;
     for(int q = 0;q < v.size();q++) {
-        root = merge(root,new node(v[q]));
+        node* new_node = new node();
+        new_node->key = v[q];
+        root = insert(root,new_node,q);
     }
-
-    auto do_add = [&](ll value) {
-        for(int q = 0;q < v.size();q++) {
-            if(v[q].value == value) return;
-            else if(value < v[q].value) {
-                if(value == 9038) {
-                    std::cout << "dsfsddf";
-                }
-                v.insert(v.begin() + q, node(value));
-                root = merge(root,new node(v[q]));
-                return;
-            }
-        }
-        v.insert(v.end(), node(value));
-        root = merge(root,new node(v.back()));
-        tree_check(root);
+    auto do_cut = [&](int a,int b) {
+        std::vector<ll> v1(v.begin(), v.begin() + a);
+        std::vector<ll> v2(v.begin() + a,v.begin() + b);
+        std::vector<ll> v3(v.begin() + b,v.end());
+        v.clear();
+        for(int q = 0;q < v1.size();q++) v.push_back(v1[q]);
+        for(int q = 0;q < v3.size();q++) v.push_back(v3[q]);
+        for(int q = 0;q < v2.size();q++) v.push_back(v2[q]);
+        
+        node *root1 = nullptr,*root2 = nullptr,*root3 = nullptr;
+        split_sub_tree(root,root1,root2,a);
+        split_sub_tree(root2,root2,root3,b - a);
+        root = merge(merge(root1,root3),root2);
     };
-    auto do_get_key = [&](ll value) {
-        ll ans = 0;
-        for(int q = 0;q < v.size();q++) {
-            if(v[q].value == value) ans = v[q].key;
-        }
-        ll get_ans = find(root,value)->key;
+    auto do_get_key = [&](ll pos) {
+        ll ans = v[pos];
+        ll get_ans = find(root,pos)->key;
         return ans == get_ans;
     };
-    auto do_reverse = [&](ll left,ll right) {
-        int start_ind = -1;
-        int end_ind = 0;
-        for(int q = 0;q < v.size();q++) {
-            if(left <= v[q].value && v[q].value <= right) {
-                v[q].value = left + right - v[q].value;
-                if(start_ind == -1) start_ind = q;
-                end_ind = q;
-            }
-        }
-        while(start_ind < end_ind) {
-            std::swap(v[start_ind],v[end_ind]);
-            ++start_ind;
-            --end_ind;
-        }
-        reverse(root,left,right);
-    };
-    for(int q = 0;q < 10000;q++) {
-        int mode = std::rand() % 3;
-        if(mode == 0) {
-            ll value = (ull)get_rand_value() % 10000;
-            do_add(value);
-        }
-        else if(false) {
-            ll left = (ull)get_rand_value();
-            ll right = (ull)get_rand_value();
-            if(left > right) std::swap(left,right);
-            do_reverse(left,right);
+    for(int q= 0;q < 10000;q++) {
+        int mode = std::rand() % 2;
+        if(mode) {
+            ll a = (ull)get_rand_value() % (vector_size - 2) + 1;
+            ll b = (ull)get_rand_value() % (vector_size - 2) + 1;
+            if(a > b)std::swap(a,b);
+            do_cut(a,b);
         }
         else {
-            ll ind = (ull)get_rand_value() % v.size();
-            if(!do_get_key(v[ind].value)) return false;
+            ll pos = (ull)get_rand_value() % (vector_size);
+            if(!do_get_key(pos)) return false;
         }
     }
     return true;
@@ -200,7 +134,7 @@ bool run_test() {
 int main() {
     int _ = 0;
     std::cin >> _;
-    for(int q = 1;q <=_;q++) {
+    for(int q = 1;q<=_;q++) {
         std::cout << "testcase " << q << " : ";
         if(run_test()) {
             std::cout << "passed\n";
