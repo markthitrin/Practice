@@ -8,7 +8,7 @@ using ull = unsigned ll;
 
 class SplayNode{ 
 public:
-    int value = 0;
+    int value = -2000000000;
     std::string s = "";
     SplayNode* left = nullptr;
     SplayNode* right = nullptr;
