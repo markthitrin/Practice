@@ -1,9 +1,8 @@
 #include <iostream>
 #include <set>
+#include <array>
 
 int main() {
-   int a = 0;
-   for(int q = 0;q < 100000;q++) {
-      a++;
-   }
+   std::array<int,2> a;
+   std::cout << a[0] << " " << a[1] << std::endl;
 }

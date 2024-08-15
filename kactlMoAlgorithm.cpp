@@ -3,6 +3,7 @@
 #include <queue>
 #include <vector>
 #include <numeric>
+#include <math.h>
 
 #define vi vector<int>
 #define pii pair<int,int>
@@ -29,7 +30,7 @@ int calc() {
 }// compute current answer
 
 vi mo(vector<pii> Q){
-    int L=0,R=0,blk=350;// N/sqrt(Q)
+    int L=0,R=0,blk=sqrt(ss.size());// N/sqrt(Q)
     vi s(sz(Q)),res=s;
     #define K(x) pii(x.first/blk,x.second^-(x.first/blk&1))
     iota(all(s),0);
@@ -43,7 +44,7 @@ vi mo(vector<pii> Q){
         res[qi]=calc();
     }
     return res;
-}statu
+}
 
 int main() {
     std::vector<std::pair<int,int>> Q;
